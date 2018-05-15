@@ -7,10 +7,11 @@
 # files and downloads them accordingly.
 
 # TODO: make script compatible with Python 2.7 and Python 3.x
-# TODO: have only hrefs in array if the <a> has an <img> child (line 60)
+# TODO: have only hrefs in array if the <a> has an <img> child
 # TODO: args handling for uninterrupted downloading
 # TODO: custom download directory
 # TODO: check for text-links on URL and paste them into txt-file
+# TODO: clean URLs from anything that follows a #
 
 # import some libraries
 from __future__ import print_function
@@ -45,11 +46,12 @@ ua = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)'
       'Chrome/23.0.1271.64 Safari/537.11'}
 
 # get URL from user
+sep = "#"
 if sys.version_info[:2] <= (2, 7):
     user_input = raw_input
 else:
     user_input = input
-url = user_input("Input URL to scrape: \n > ")
+url = user_input("Input URL to scrape: \n > ").split(sep, 1)[0]
 
 # make some soup
 req = urllib2.Request(url, headers=ua)
