@@ -7,8 +7,7 @@
 # files and downloads them accordingly.
 
 # TODO: make script compatible with Python 2.7 and Python 3.x
-# TODO: make downloader handle unicode characters (i.e. cyrillic)
-# TODO: have only a hrefs in array if the a has an img child (line 60)
+# TODO: have only hrefs in array if the <a> has an <img> child (line 60)
 # TODO: args handling for uninterrupted downloading
 # TODO: custom download directory
 # TODO: check for text-links on URL and paste them into txt-file
@@ -36,7 +35,7 @@ print("""
 | (__| | | | (_| | | | | \__ \ (__| | | (_| | |_) |  __/ |
  \___|_| |_|\__,_|_| |_| |___/\___|_|  \__,_| .__/ \___|_|
                                             | |
-  Download picrelated from any chan         |_|       v0.2
+  Download pic-related from any chan        |_|       v0.2
 
 """)
 
@@ -70,7 +69,7 @@ for img in soup.select('a[href$=jpg],'
                        'a[href$=png],'
                        'a[href$=gif],'
                        'a[href$=webm]'):
-    img_url = urlparse.urljoin(url, img['href'])
+    img_url = urlparse.urljoin(url, img['href']).encode('utf-8')
     if img_url not in scrape:
         scrape.append(img_url)
 
@@ -94,6 +93,7 @@ for img in scrape:
         print("Grabbing " + img + "...")
         with open(full_path, 'wb') as f:
             f.write(filedata.read())
+            f.close()
         print("OK!")
     else:
         skipped += 1
