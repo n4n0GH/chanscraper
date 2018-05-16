@@ -77,7 +77,9 @@ for img in soup.select('a[href$=jpg],'
                        'a[href$=jpeg],'
                        'a[href$=png],'
                        'a[href$=gif],'
-                       'a[href$=webm]'):
+                       'a[href$=webm],'
+                       'a[href$=mp4],'
+                       'a[href$=mp3]'):
     img_url = urlparse.urljoin(url, img['href']).encode('utf-8')
     if img_url not in scrape:
         scrape.append(img_url)
