@@ -8,10 +8,9 @@
 
 # TODO: make script compatible with Python 2.7 and Python 3.x
 # TODO: have only hrefs in array if the <a> has an <img> child
-# TODO: args handling for uninterrupted downloading
+# TODO: args handling for direct downloading
 # TODO: custom download directory
 # TODO: check for text-links on URL and paste them into txt-file
-# TODO: clean URLs from anything that follows a #
 
 # import some libraries
 from __future__ import print_function
@@ -26,6 +25,13 @@ except ImportError:
     import urlparse
 import sys
 import os
+
+# clear screen and set terminal title
+if os.name == "nt":
+    os.system("cls")
+else:
+    os.system("clear")
+sys.stdout.write("\x1b]2;chan scraper\x07")
 
 # print ASCII intro
 print("""
@@ -46,11 +52,12 @@ ua = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)'
       'Chrome/23.0.1271.64 Safari/537.11'}
 
 # get URL from user
-sep = "#"
 if sys.version_info[:2] <= (2, 7):
     user_input = raw_input
 else:
     user_input = input
+
+sep = "#"
 url = user_input("Input URL to scrape: \n > ").split(sep, 1)[0]
 
 # make some soup
@@ -78,7 +85,9 @@ for img in soup.select('a[href$=jpg],'
 # set up path names and other variables for downloads
 home = os.path.expanduser("~")
 fpath = os.path.join(home, "chanscraper", base, path, thread)
-skipped = 0
+s = 0
+e = 0
+i = 1
 
 # create directory if necessary
 if not os.path.exists(fpath):
@@ -89,17 +98,20 @@ for img in scrape:
     file_name = img.split('/')[-1]
     full_path = os.path.join(fpath, file_name)
     if not os.path.exists(full_path):
-        filedata = urllib2.urlopen(img)
-        if skipped > 0:
-            print("\n")
-        print("Grabbing " + img + "...")
-        with open(full_path, 'wb') as f:
-            f.write(filedata.read())
-            f.close()
-        print("OK!")
+        try:
+            filedata = urllib2.urlopen(img)
+            print("Grabbing [" + str(i) + "/" +
+                  str(len(scrape) - s) + "]", end="\r")
+            sys.stdout.flush()
+            with open(full_path, 'wb') as f:
+                f.write(filedata.read())
+            i += 1
+        except urllib2.HTTPError:
+            e += 1
+            print("HTTP error, skipping [" + str(e) + "]")
     else:
-        skipped += 1
+        s += 1
         print("File already exists, skipping [" +
-              str(skipped) + "]... \r", end="")
+              str(s) + "]...", end="\r")
 
-print("\nDownloaded " + str(len(scrape) - skipped) + " new files!")
+print("Downloaded " + str(i - e - s) + " new files!")
