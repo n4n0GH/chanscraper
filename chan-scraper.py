@@ -6,7 +6,7 @@
 # chan or website in general. It looks for links that point to media
 # files and downloads them accordingly.
 
-# TODO: make script compatible with Python 2.7 and Python 3.x
+# TODO: port script to Python 3.x
 # TODO: have only hrefs in array if the <a> has an <img> child
 # TODO: args handling for direct downloading
 # TODO: custom download directory
@@ -15,14 +15,8 @@
 # import some libraries
 from __future__ import print_function
 from bs4 import BeautifulSoup
-try:
-    import urllib.request as urllib2
-except ImportError:
-    import urllib2
-try:
-    import urllib.parse as urlparse
-except ImportError:
-    import urlparse
+import urllib2
+import urlparse
 import sys
 import os
 
@@ -52,13 +46,8 @@ ua = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)'
       'Chrome/23.0.1271.64 Safari/537.11'}
 
 # get URL from user
-if sys.version_info[:2] <= (2, 7):
-    user_input = raw_input
-else:
-    user_input = input
-
 sep = "#"
-url = user_input("Input URL to scrape: \n > ").split(sep, 1)[0]
+url = raw_input("Input URL to scrape: \n > ").split(sep, 1)[0]
 
 # make some soup
 req = urllib2.Request(url, headers=ua)
@@ -102,7 +91,7 @@ for img in scrape:
     if not os.path.exists(full_path):
         try:
             filedata = urllib2.urlopen(img)
-            print("Grabbing [" + str(i) + "/" +
+            print("Grabbing file... [" + str(i) + "/" +
                   str(len(scrape) - s) + "]", end="\r")
             sys.stdout.flush()
             with open(full_path, 'wb') as f:
@@ -110,10 +99,10 @@ for img in scrape:
             i += 1
         except urllib2.HTTPError:
             e += 1
-            print("HTTP error, skipping [" + str(e) + "]")
+            print("HTTP error, skipping... [" + str(e) + "]")
     else:
         s += 1
-        print("File already exists, skipping [" +
+        print("File already exists, skipping... [" +
               str(s) + "]...", end="\r")
 
-print("Downloaded " + str(i - e - s) + " new files!")
+print("\nDownloaded " + str(i - 1 - e) + " new files!")
