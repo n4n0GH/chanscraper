@@ -23,6 +23,7 @@ import subprocess
 import sys
 import os
 
+
 # set classes for colors
 class fg:
     BLACK = '\033[30m'
@@ -31,19 +32,23 @@ class fg:
     YELLOW = '\033[33m'
     WHITE = '\033[37m'
 
+
 class bg:
     GREEN = '\033[42m'
+
 
 class style:
     BLINK = '\33[5m'
     CLINE = '\x1b[2K'
     RESET_ALL = '\033[0m'
 
+
 # set up notification module
 def notify(message):
     subprocess.call(["notify-send", "-i", "document-save",
                     "chan scraper", message])
     return
+
 
 # set up argsparser
 parser = argparse.ArgumentParser(description="""
@@ -157,11 +162,11 @@ for img in scrape:
         sys.stdout.flush()
 
 # check passed time and convert to readable string
-finish = datetime.now() - start 
+finish = datetime.now() - start
 finish = str(finish)
 
 # print success messages as notification window and in terminal
 notify("Downloaded " + str(i - e) + " new files in " + finish + "!")
-print(bg.GREEN + fg.BLACK + 
+print(bg.GREEN + fg.BLACK +
       "\nDownloaded " + str(i - e) + " new files in " + style.BLINK +
       finish + "!" + style.RESET_ALL)
