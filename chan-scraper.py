@@ -6,19 +6,58 @@
 # chan or website in general. It looks for links that point to media
 # files and downloads them accordingly.
 
-# TODO: port script to Python 3.x
 # TODO: have only hrefs in array if the <a> has an <img> child
-# TODO: args handling for direct downloading
 # TODO: custom download directory
 # TODO: check for text-links on URL and paste them into txt-file
+# TODO: circumvent bot detection on websites like ylilauta
+# TODO: include colored output
 
 # import some libraries
 from __future__ import print_function
 from bs4 import BeautifulSoup
+from datetime import datetime
 import urllib2
 import urlparse
+import argparse
+import subprocess
 import sys
 import os
+
+# set classes for colors
+class fg:
+    BLACK = '\033[30m'
+    RED = '\033[31m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    WHITE = '\033[37m'
+
+class bg:
+    GREEN = '\033[42m'
+
+class style:
+    BLINK = '\33[5m'
+    CLINE = '\x1b[2K'
+    RESET_ALL = '\033[0m'
+
+# set up notification module
+def notify(message):
+    subprocess.call(["notify-send", "-i", "document-save",
+                    "chan scraper", message])
+    return
+
+# set up argsparser
+parser = argparse.ArgumentParser(description="""
+                                 A standalone mass downloader for any
+                                 arbitrary chan or website in general.\n
+                                 Will pick any <a>-tags that end in
+                                 media files (i.e. jpg, png, mp4) and
+                                 write them to disk.
+                                 """)
+group = parser.add_mutually_exclusive_group()
+group.add_argument("-d", "--download",
+                   help="start a direct download from a provided URL",
+                   nargs=1, metavar="(URL)")
+args = parser.parse_args()
 
 # clear screen and set terminal title
 if os.name == "nt":
@@ -28,7 +67,7 @@ else:
 sys.stdout.write("\x1b]2;chan scraper\x07")
 
 # print ASCII intro
-print("""
+print("""\033[32m
       _
      | |
   ___| |__   __ _ _ __    ___  ___ _ __ __ _ _ __   ___ _ __
@@ -36,28 +75,40 @@ print("""
 | (__| | | | (_| | | | | \__ \ (__| | | (_| | |_) |  __/ |
  \___|_| |_|\__,_|_| |_| |___/\___|_|  \__,_| .__/ \___|_|
                                             | |
-  Download pic-related from any chan        |_|       v0.2
-
+                                            |_|         \033[31mv0.2
+\033[0m
 """)
 
 # set up UA so *chan accepts the request
-ua = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)'
-      'AppleWebKit/537.11 (KHTML, like Gecko)'
+ua = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) '
+      'AppleWebKit/537.11 (KHTML, like Gecko) '
       'Chrome/23.0.1271.64 Safari/537.11'}
 
-# get URL from user
+# get URL from args or user
 sep = "#"
-url = raw_input("Input URL to scrape: \n > ").split(sep, 1)[0]
 
-# make some soup
-req = urllib2.Request(url, headers=ua)
-soup = BeautifulSoup(urllib2.urlopen(req), "lxml")
+if args.download:
+    url = args.download[0].split(sep, 1)[0]
+    print("Scraping from: \n" + fg.GREEN + "> " + style.RESET_ALL + url)
+else:
+    url = raw_input("Input URL to scrape: \n" + fg.GREEN +
+                    "> " + style.RESET_ALL).split(sep, 1)[0]
+
+# start counting time
+start = datetime.now()
 
 # split the url into parts
 parse = url.split('/')
 base = parse[2]
 path = parse[3]
 thread = parse[-1]
+
+# circumvent "no JS" detection
+# include logic here
+
+# make some soup
+req = urllib2.Request(url, headers=ua)
+soup = BeautifulSoup(urllib2.urlopen(req), "lxml")
 
 # fetch all files and append to array
 scrape = []
@@ -76,9 +127,7 @@ for img in soup.select('a[href$=jpg],'
 # set up path names and other variables for downloads
 home = os.path.expanduser("~")
 fpath = os.path.join(home, "chanscraper", base, path, thread)
-s = 0
-e = 0
-i = 1
+i = e = s = 0
 
 # create directory if necessary
 if not os.path.exists(fpath):
@@ -91,18 +140,28 @@ for img in scrape:
     if not os.path.exists(full_path):
         try:
             filedata = urllib2.urlopen(img)
-            print("Grabbing file... [" + str(i) + "/" +
+            i += 1
+            print(style.CLINE + fg.GREEN +
+                  "Grabbing file... [" + str(i) + "/" +
                   str(len(scrape) - s) + "]", end="\r")
-            sys.stdout.flush()
             with open(full_path, 'wb') as f:
                 f.write(filedata.read())
-            i += 1
+            sys.stdout.flush()
         except urllib2.HTTPError:
             e += 1
-            print("HTTP error, skipping... [" + str(e) + "]")
+            print(fg.RED + "HTTP error, skipping... [" + str(e) + "]")
     else:
         s += 1
-        print("File already exists, skipping... [" +
-              str(s) + "]...", end="\r")
+        print(fg.YELLOW + "File already exists, skipping... [" +
+              str(s) + "]", end="\r")
+        sys.stdout.flush()
 
-print("\nDownloaded " + str(i - 1 - e) + " new files!")
+# check passed time and convert to readable string
+finish = datetime.now() - start 
+finish = str(finish)
+
+# print success messages as notification window and in terminal
+notify("Downloaded " + str(i - e) + " new files in " + finish + "!")
+print(bg.GREEN + fg.BLACK + 
+      "\nDownloaded " + str(i - e) + " new files in " + style.BLINK +
+      finish + "!" + style.RESET_ALL)
