@@ -144,7 +144,7 @@ for img in scrape:
     full_path = os.path.join(fpath, file_name)
     if not os.path.exists(full_path):
         try:
-            filedata = urllib2.urlopen(img)
+            filedata = urllib2.urlopen(img, timeout=5)
             i += 1
             print(style.CLINE + fg.GREEN +
                   "Grabbing file... [" + str(i) + "/" +
@@ -154,7 +154,13 @@ for img in scrape:
             sys.stdout.flush()
         except urllib2.HTTPError:
             e += 1
-            print(fg.RED + "HTTP error, skipping... [" + str(e) + "]")
+            print(style.CLINE + fg.RED + "HTTP error, skipping... [" +
+                  str(e) + "]", end="\r")
+        except urllib2.URLError:
+            e += 1
+            print(style.CLINE + fg.RED +
+                  "Timeout or bad URL, skipping... [" + str(e) + "]",
+                  end="\r")
     else:
         s += 1
         print(fg.YELLOW + "File already exists, skipping... [" +
@@ -166,7 +172,8 @@ finish = datetime.now() - start
 finish = str(finish)
 
 # print success messages as notification window and in terminal
-notify("Downloaded " + str(i - e) + " new files in " + finish + "!")
+notify("Downloaded " + str(i - e) + " new files from /" + path +
+       "/ in " + finish + "!")
 print(bg.GREEN + fg.BLACK +
-      "\nDownloaded " + str(i - e) + " new files in " + style.BLINK +
-      finish + "!" + style.RESET_ALL)
+      "\nDownloaded " + str(i - e) + " new files from /" + path +
+      "/ in " + style.BLINK + finish + "!" + style.RESET_ALL)
