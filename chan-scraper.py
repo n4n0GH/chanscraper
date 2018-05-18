@@ -175,5 +175,7 @@ finish = str(finish)
 notify("Downloaded " + str(i - e) + " new files from /" + path +
        "/ in " + finish + "!")
 print(bg.GREEN + fg.BLACK +
-      "\nDownloaded " + str(i - e) + " new files from /" + path +
-      "/ in " + style.BLINK + finish + "!" + style.RESET_ALL)
+      "Downloaded " + str(i - e) + " new files from /" + path +
+      "/ in " + style.BLINK + finish + "!\n" +
+      style.RESET_ALL + fg.YELLOW + "Skipped: " + str(s) +
+      style.RESET_ALL + " | " + fg.RED + "Errors: " + str(e))
