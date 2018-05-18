@@ -10,7 +10,6 @@
 # TODO: custom download directory
 # TODO: check for text-links on URL and paste them into txt-file
 # TODO: circumvent bot detection on websites like ylilauta
-# TODO: include colored output
 
 # import some libraries
 from __future__ import print_function
@@ -58,10 +57,13 @@ parser = argparse.ArgumentParser(description="""
                                  media files (i.e. jpg, png, mp4) and
                                  write them to disk.
                                  """)
-group = parser.add_mutually_exclusive_group()
-group.add_argument("-d", "--download",
+parser.add_argument("-d", "--download",
                    help="start a direct download from a provided URL",
                    nargs=1, metavar="(URL)")
+parser.add_argument("-t", "--timeout",
+                   help="set a custom timout for downloads in seconds,\
+                   default is 5", nargs=1, type=int,
+                   metavar="(SECONDS)")
 args = parser.parse_args()
 
 # clear screen and set terminal title
@@ -134,6 +136,11 @@ home = os.path.expanduser("~")
 fpath = os.path.join(home, "chanscraper", base, path, thread)
 i = e = s = 0
 
+if args.timeout:
+    kill = args.timeout[0]
+else:
+    kill = 5
+
 # create directory if necessary
 if not os.path.exists(fpath):
     os.makedirs(fpath)
@@ -144,7 +151,7 @@ for img in scrape:
     full_path = os.path.join(fpath, file_name)
     if not os.path.exists(full_path):
         try:
-            filedata = urllib2.urlopen(img, timeout=5)
+            filedata = urllib2.urlopen(img, timeout=kill)
             i += 1
             print(style.CLINE + fg.GREEN +
                   "Grabbing file... [" + str(i) + "/" +
