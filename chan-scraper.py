@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python
 #
 # coding: utf-8
 
@@ -49,7 +49,7 @@ def notify(message):
     return
 
 
-# set up argsparser
+# set up argparser
 parser = argparse.ArgumentParser(description="""
                                  A standalone mass downloader for any
                                  arbitrary chan or website in general.\n
@@ -58,12 +58,12 @@ parser = argparse.ArgumentParser(description="""
                                  write them to disk.
                                  """)
 parser.add_argument("-d", "--download",
-                   help="start a direct download from a provided URL",
-                   nargs=1, metavar="(URL)")
+                    help="start a direct download from a provided URL",
+                    nargs=1, metavar="(URL)")
 parser.add_argument("-t", "--timeout",
-                   help="set a custom timout for downloads in seconds,\
-                   default is 5", nargs=1, type=int,
-                   metavar="(SECONDS)")
+                    help="set a custom timout for downloads in seconds,\
+                    default is 10", nargs=1, type=int,
+                    metavar="(SECONDS)")
 args = parser.parse_args()
 
 # clear screen and set terminal title
@@ -139,7 +139,7 @@ i = e = s = 0
 if args.timeout:
     kill = args.timeout[0]
 else:
-    kill = 5
+    kill = 10
 
 # create directory if necessary
 if not os.path.exists(fpath):
@@ -176,13 +176,13 @@ for img in scrape:
 
 # check passed time and convert to readable string
 finish = datetime.now() - start
-finish = str(finish)
+finish = str(finish.total_seconds())
 
 # print success messages as notification window and in terminal
 notify("Downloaded " + str(i - e) + " new files from /" + path +
-       "/ in " + finish + "!")
+       "/ in " + finish + " seconds!")
 print(bg.GREEN + fg.BLACK +
       "Downloaded " + str(i - e) + " new files from /" + path +
-      "/ in " + style.BLINK + finish + "!\n" +
+      "/ in " + style.BLINK + finish + " seconds!\n" +
       style.RESET_ALL + fg.YELLOW + "Skipped: " + str(s) +
       style.RESET_ALL + " | " + fg.RED + "Errors: " + str(e))
