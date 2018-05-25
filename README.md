@@ -1,6 +1,8 @@
 # chan-scraper
 A scraper made in Python that is capable of downloading any pic-related from any chan or website.
 
+![chan-scraper v0.2](https://github.com/n4n0GH/chan-scraper/blob/master/Screenshot_20180525_094952.png)
+
 ## How to use
 Download chan-scraper.py to any location of your liking, then start it through a terminal by using "python chan-scraper.py" (if you use it frequently, you might want to set an alias for this).
 
