@@ -10,6 +10,8 @@
 # TODO: custom download directory
 # TODO: check for text-links on URL and paste them into txt-file
 # TODO: circumvent bot detection on websites like ylilauta
+# TODO: periodic downloads
+# TODO: specify additional filetypes through sysargs
 
 # import some libraries
 from __future__ import print_function
@@ -113,13 +115,19 @@ thread = parse[-1]
 # circumvent "no JS" detection
 # include logic here
 
-# make some soup
-req = urllib2.Request(url, headers=ua)
-soup = BeautifulSoup(urllib2.urlopen(req), "lxml")
+print(fg.GREEN + "Connecting...", end="\r")
+sys.stdout.flush()
+
+# make some soup and end on 404
+try:
+    req = urllib2.Request(url, headers=ua)
+    soup = BeautifulSoup(urllib2.urlopen(req), "lxml")
+except urllib2.URLError:
+    print(fg.RED + "Host unreachable, stopping...")
+    sys.exit()
 
 # fetch all files and append to array
 scrape = []
-
 for img in soup.select('a[href$=jpg],'
                        'a[href$=jpeg],'
                        'a[href$=png],'
@@ -130,6 +138,9 @@ for img in soup.select('a[href$=jpg],'
     img_url = urlparse.urljoin(url, img['href']).encode('utf-8')
     if img_url not in scrape:
         scrape.append(img_url)
+
+print(fg.GREEN + "Setting up directory...", end="\r")
+sys.stdout.flush()
 
 # set up path names and other variables for downloads
 home = os.path.expanduser("~")
@@ -144,6 +155,9 @@ else:
 # create directory if necessary
 if not os.path.exists(fpath):
     os.makedirs(fpath)
+
+print(style.CLINE + fg.GREEN + "Grabbing file...", end="\r")
+sys.stdout.flush()
 
 # download array to disk
 for img in scrape:
