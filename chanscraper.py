@@ -45,21 +45,17 @@ class style:
 
 
 # set up notification modules for different operating systems
-if sys.platform == "linux":
-    def notify(message):
+def notify(message):
+    if sys.platform == "linux":
         subprocess.call(["notify-send", "-i", "document-save",
-            "chan scraper", message])
-        return
-elif sys.platform == "darwin":
-    def notify(message):
+            "chanscraper", message])
+    elif sys.platform == "darwin":
         os.system("""
                 osascript -e 'display notification "{}" with title "{}"'
                 """.format(message, "chanscraper"))
-        return
-elif sys.platform == "win32":
-    def notify(message):
-        print("Your OS makes it complicated to do simple and fun things.")
-        return
+    elif sys.platform == "win32":
+        print("Sorry, no fancy notifications for you.")
+    return
 
 # set up argparser
 parser = argparse.ArgumentParser(description="""
