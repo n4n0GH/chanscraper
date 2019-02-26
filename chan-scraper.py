@@ -44,12 +44,22 @@ class style:
     RESET_ALL = '\033[0m'
 
 
-# set up notification module
-def notify(message):
-    subprocess.call(["notify-send", "-i", "document-save",
-                    "chan scraper", message])
-    return
-
+# set up notification modules for different operating systems
+if sys.platform == "linux":
+    def notify(message):
+        subprocess.call(["notify-send", "-i", "document-save",
+            "chan scraper", message])
+        return
+elif sys.platform == "darwin":
+    def notify(message):
+        os.system("""
+                osascript -e 'display notification "{}" with title "{}"'
+                """.format(message, "chanscraper"))
+        return
+elif sys.platform == "win32":
+    def notify(message):
+        print("Your OS makes it complicated to do simple and fun things.")
+        return
 
 # set up argparser
 parser = argparse.ArgumentParser(description="""
@@ -66,6 +76,9 @@ parser.add_argument("-t", "--timeout",
                     help="set a custom timout for downloads in seconds,\
                     default is 10", nargs=1, type=int,
                     metavar="(SECONDS)")
+parser.add_argument("-c", "--cleanup",
+                    help="removes files with duplicate md5 sums",
+                    action="store_true")
 args = parser.parse_args()
 
 # clear screen and set terminal title
@@ -200,3 +213,7 @@ print(bg.GREEN + fg.BLACK +
       "/ in " + style.BLINK + finish + " seconds!\n" +
       style.RESET_ALL + fg.YELLOW + "Skipped: " + str(s) +
       style.RESET_ALL + " | " + fg.RED + "Errors: " + str(e))
+
+# remove duplicate files
+if args.cleanup:
+    print("will cleanup after downloads")
