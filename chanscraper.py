@@ -14,6 +14,8 @@
 # TODO: circumvent bot detection on websites like ylilauta
 # TODO: periodic downloads
 # TODO: specify additional filetypes through sysargs
+# TODO: use config file to store additional filetypes, custom directories or if
+#       script should exit terminal upon completion
 
 
 # import some libraries
@@ -83,6 +85,10 @@ parser.add_argument("-c", "--cleanup",
 parser.add_argument("-e", "--exit",
                     help="automatically closes terminal after finishing",
                     action="store_true")
+parser.add_argument("-D", "--directory",
+                    help="set a custom parent directory to write to,\
+                    default is your user's home directory; use absolute paths",
+                    nargs=1, metavar="(DIR)")
 args = parser.parse_args()
 
 
@@ -172,8 +178,12 @@ sys.stdout.flush()
 
 
 # set up path names and other variables for downloads
-home = os.path.expanduser("~")
-fpath = os.path.join(home, "chanscraper", base, path, thread)
+if args.directory:
+    home = args.directory[0]
+    fpath = os.path.join(home, base, path, thread)
+else:
+    home = os.path.expanduser("~")
+    fpath = os.path.join(home, "chanscraper", base, path, thread)
 i = e = s = 0
 
 
@@ -188,7 +198,7 @@ if not os.path.exists(fpath):
     os.makedirs(fpath)
 
 
-print(style.CLINE + fg.GREEN + "Grabbing file...", end="\r")
+print(style.CLINE + fg.GREEN + "Preparing scraper...", end="\r")
 sys.stdout.flush()
 
 
