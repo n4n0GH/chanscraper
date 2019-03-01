@@ -2,9 +2,11 @@
 #
 # coding: utf-8
 
-# chan-scraper.py is a standalone mass downloader for any arbitrary
+
+# chanscraper.py is a standalone mass downloader for any arbitrary
 # chan or website in general. It looks for links that point to media
 # files and downloads them accordingly.
+
 
 # TODO: have only hrefs in array if the <a> has an <img> child
 # TODO: custom download directory
@@ -12,6 +14,7 @@
 # TODO: circumvent bot detection on websites like ylilauta
 # TODO: periodic downloads
 # TODO: specify additional filetypes through sysargs
+
 
 # import some libraries
 from __future__ import print_function
@@ -23,6 +26,7 @@ import argparse
 import subprocess
 import sys
 import os
+import signal
 
 
 # set classes for colors
@@ -57,6 +61,7 @@ def notify(message):
         print("Sorry, no fancy notifications for you.")
     return
 
+
 # set up argparser
 parser = argparse.ArgumentParser(description="""
                                  A standalone mass downloader for any
@@ -75,14 +80,19 @@ parser.add_argument("-t", "--timeout",
 parser.add_argument("-c", "--cleanup",
                     help="removes files with duplicate md5 sums",
                     action="store_true")
+parser.add_argument("-e", "--exit",
+                    help="automatically closes terminal after finishing",
+                    action="store_true")
 args = parser.parse_args()
+
 
 # clear screen and set terminal title
 if os.name == "nt":
     os.system("cls")
 else:
     os.system("clear")
-sys.stdout.write("\x1b]2;chan scraper\x07")
+sys.stdout.write("\x1b]2;chanscraper\x07")
+
 
 # print ASCII intro
 print("""\033[32m
@@ -97,10 +107,12 @@ print("""\033[32m
 \033[0m
 """)
 
+
 # set up UA so *chan accepts the request
 ua = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) '
       'AppleWebKit/537.11 (KHTML, like Gecko) '
       'Chrome/23.0.1271.64 Safari/537.11'}
+
 
 # get URL from args or user
 sep = "#"
@@ -112,8 +124,10 @@ else:
     url = raw_input("Input URL to scrape: \n" + fg.GREEN +
                     "> " + style.RESET_ALL).split(sep, 1)[0]
 
+
 # start counting time
 start = datetime.now()
+
 
 # split the url into parts
 parse = url.split('/')
@@ -121,11 +135,14 @@ base = parse[2]
 path = parse[3]
 thread = parse[-1]
 
+
 # circumvent "no JS" detection
 # include logic here
 
+
 print(fg.GREEN + "Connecting...", end="\r")
 sys.stdout.flush()
+
 
 # make some soup and end on 404
 try:
@@ -134,6 +151,7 @@ try:
 except urllib2.URLError:
     print(fg.RED + "Host unreachable, stopping...")
     sys.exit()
+
 
 # fetch all files and append to array
 scrape = []
@@ -148,25 +166,31 @@ for img in soup.select('a[href$=jpg],'
     if img_url not in scrape:
         scrape.append(img_url)
 
+
 print(fg.GREEN + "Setting up directory...", end="\r")
 sys.stdout.flush()
+
 
 # set up path names and other variables for downloads
 home = os.path.expanduser("~")
 fpath = os.path.join(home, "chanscraper", base, path, thread)
 i = e = s = 0
 
+
 if args.timeout:
     kill = args.timeout[0]
 else:
     kill = 10
 
+
 # create directory if necessary
 if not os.path.exists(fpath):
     os.makedirs(fpath)
 
+
 print(style.CLINE + fg.GREEN + "Grabbing file...", end="\r")
 sys.stdout.flush()
+
 
 # download array to disk
 for img in scrape:
@@ -197,12 +221,17 @@ for img in scrape:
               str(s) + "]", end="\r")
         sys.stdout.flush()
 
+
 # check passed time and convert to readable string
 finish = datetime.now() - start
 finish = str(finish.total_seconds())
 
+
 # print success messages as notification window and in terminal
-notify("Downloaded " + str(i - e) + " new files from /" + path +
+if i - e == 0:
+    notify("No new files have been downloaded.")
+else:
+    notify("Downloaded " + str(i - e) + " new files from /" + path +
        "/ in " + finish + " seconds!")
 print(bg.GREEN + fg.BLACK +
       "Downloaded " + str(i - e) + " new files from /" + path +
@@ -210,6 +239,12 @@ print(bg.GREEN + fg.BLACK +
       style.RESET_ALL + fg.YELLOW + "Skipped: " + str(s) +
       style.RESET_ALL + " | " + fg.RED + "Errors: " + str(e))
 
+
 # remove duplicate files
+# coming soon(tm)
 if args.cleanup:
     print("will cleanup after downloads")
+
+# exit terminal emulator
+if args.exit:
+    os.kill(os.getppid(), signal.SIGHUP)
