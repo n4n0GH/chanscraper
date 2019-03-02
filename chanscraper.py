@@ -22,13 +22,17 @@
 from __future__ import print_function
 from bs4 import BeautifulSoup
 from datetime import datetime
+from collections import defaultdict
 import urllib2
 import urlparse
 import argparse
 import subprocess
 import sys
 import os
+import re
 import signal
+import hashlib
+import dupe
 
 
 # set classes for colors
@@ -229,6 +233,11 @@ def logic():
           style.RESET_ALL + " | " + fg.RED + "Errors: " + str(e) +
           style.RESET_ALL + "\n")
 
+    # remove duplicate files if args is set
+    if args.cleanup:
+        print("Starting duplicate finder...", end="\r")
+        dupe.main(fpath)
+
 
 # get URL from args or user
 sep = "#"
@@ -242,12 +251,6 @@ else:
         url = address.split(sep, 1)[0]
         print("Scraping from: \n" + fg.GREEN + "> " + style.RESET_ALL + url)
         logic()
-
-
-# remove duplicate files
-# coming soon(tm)
-if args.cleanup:
-    print("will cleanup after downloads")
 
 
 # exit terminal emulator
