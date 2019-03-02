@@ -22,6 +22,8 @@ Change the default connection timeout from 10 seconds to something else. Argumen
 Exit the terminal parent process once the download is complete. Fire and forget.
 ### -D (DIR), --directory (DIR)
 Use a custom directory to write the files to. Default is ~/chanscraper; only absolute paths are allowed. Check your permissions on that directory.
+### -c, --cleanup
+Starts the duplication finder located in dupe.py and automatically removes duplicates of image files in the current download directory. Supports multi-URL downloads.
 
 ## How does it work
 chanscraper.py searches any provided URL for <a>-tags that point to media files (i.e. .png, .jpg, etc.) and starts downloading them. It creates a directory structure in your home folder by default (~/chanscraper) to store your downloads in.
