@@ -85,7 +85,7 @@ parser.add_argument("-t", "--timeout",
                     default is 10", nargs=1, type=int,
                     metavar="(SECONDS)")
 parser.add_argument("-c", "--cleanup",
-                    help="removes files with duplicate md5 sums",
+                    help="removes files with duplicate sha1 digests",
                     action="store_true")
 parser.add_argument("-e", "--exit",
                     help="automatically closes terminal after finishing",
@@ -235,7 +235,7 @@ def logic():
 
     # remove duplicate files if args is set
     if args.cleanup:
-        print("Starting duplicate finder...", end="\r")
+        print("Starting duplicate detection...", end="\r")
         dupe.main(fpath)
 
 
