@@ -15,7 +15,7 @@ Download chanscraper.py to any location of your liking, then start it through a 
 ### -h, --help
 Invoke help page for the script and read about the available arguments.
 ### -d (URL), --download (URL)
-Specify the URL to download from. Last part of the URL will be used as the directory title to write to. This can be a made-up name and doesn't have to be part of the original URL.
+Specify the URL to download from. Last part of the URL will be used as the directory title to write to. This can be a made-up name and doesn't have to be part of the original URL. When using multiple URLs to download from, each URL has to be seperated by a space.
 ### -t, --timeout
 Change the default connection timeout from 10 seconds to something else. Argument takes integers only.
 ### -e, --exit
