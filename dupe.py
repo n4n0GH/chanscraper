@@ -20,14 +20,14 @@ start = datetime.now()
 
 
 def hash(path):
-    '''Hash a file's content.'''
+    # hash a file's content
     with open(path, "rb") as file_:
         hash_ = hashlib.sha1(file_.read()).hexdigest()
         return int(hash_, 16)
 
 
 def crawl(root, *exts):
-    '''Recursively search a given path for files matching a list extensions.'''
+    # recursively search a given path
     # construct the regexp
     regexp = "|".join(["\." + ext + "$" for ext in exts])
     pattern = re.compile(regexp)
@@ -47,7 +47,7 @@ def crawl(root, *exts):
 
 def format(files):
     counter_ = 0
-    '''Niceify the output.'''
+    # niceify the output
     for file_ in files.values():
         # print only if there are actually duplicate files
         if len(file_) > 1:
@@ -65,9 +65,10 @@ def format(files):
 
 
 def main(path):
+    # clears a leftover line from chanscraper.py
     print("""                                """, end="\r")
     print("Searching in:\n\033[32m>\033[0m " + path +"\033[0m")
-    extensions = ["jpg", "jpeg", "png", "gif"]
+    extensions = ["jpg", "jpeg", "png", "gif", "webm", "mp4", "mp3"]
     files = crawl(path, *extensions)
     format(files)
 
