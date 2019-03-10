@@ -254,7 +254,7 @@ def logic():
         if args.cleanup:
             print("Starting duplicate detection...", end="\r")
             dupe.main(fpath)
-            break
+        break
 
 
 # get URL from args or user
