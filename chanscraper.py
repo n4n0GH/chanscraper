@@ -94,6 +94,9 @@ parser.add_argument("-D", "--directory",
                     help="set a custom parent directory to write to,\
                     default is your user's home directory; use absolute paths",
                     nargs=1, metavar="(DIR)")
+parser.add_argument("-v", "--verbose",
+                    help="print additional messages during processing for \
+                    debugging purposes", action="store_true")
 args = parser.parse_args()
 
 
@@ -104,6 +107,8 @@ else:
     os.system("clear")
 sys.stdout.write("\x1b]2;chanscraper\x07")
 
+if args.verbose:
+    print(bg.GREEN + fg.BLACK + "VERBOSE MODE ACTIVE" + style.RESET_ALL)
 
 # print ASCII intro
 print("""\033[32m
@@ -130,113 +135,126 @@ def logic():
     # start counting time
     start = datetime.now()
 
-    # split the url into parts
-    parse = url.split('/')
-    base = parse[2]
-    path = parse[3]
-    thread = parse[-1]
+    while True:
+        # split the url into parts
+        parse = url.split('/')
+        base = parse[2]
+        path = parse[3]
+        thread = parse[-1]
 
-    # circumvent "no JS" detection
-    # include logic here
+        # print debugging
+        if args.verbose:
+            print("base: " + base)
+            print("path: " + path)
+            print("thread: " + thread)
+            print("url: " + url)
 
-    print(fg.GREEN + "Connecting...", end="\r")
-    sys.stdout.flush()
+        # circumvent "no JS" detection
+        # include logic here
 
-    # make some soup and end on 404
-    try:
-        req = urllib2.Request(url, headers=ua)
-        soup = BeautifulSoup(urllib2.urlopen(req), "lxml")
-    except urllib2.URLError:
-        print(fg.RED + "Host unreachable, stopping...")
-        sys.exit()
+        print(fg.GREEN + "Connecting...", end="\r")
+        sys.stdout.flush()
 
-    # fetch all files and append to array
-    scrape = []
-    for img in soup.select('a[href$=jpg],'
-                           'a[href$=jpeg],'
-                           'a[href$=png],'
-                           'a[href$=gif],'
-                           'a[href$=webm],'
-                           'a[href$=mp4],'
-                           'a[href$=mp3]'):
-        img_url = urlparse.urljoin(url, img['href']).encode('utf-8')
-        if img_url not in scrape:
-            scrape.append(img_url)
+        # make some soup and end on 404
+        try:
+            req = urllib2.Request(url, headers=ua)
+            soup = BeautifulSoup(urllib2.urlopen(req), "lxml")
+            if args.verbose:
+                print("parsed sourcecode: \n" + str(soup))
+        except urllib2.URLError:
+            print(fg.RED + "Host unreachable, stopping...\n" + style.RESET_ALL)
+            break
 
-    print(fg.GREEN + "Setting up directory...", end="\r")
-    sys.stdout.flush()
+        # fetch all files and append to array
+        scrape = []
+        for img in soup.select('a[href$=jpg],'
+                               'a[href$=jpeg],'
+                               'a[href$=png],'
+                               'a[href$=gif],'
+                               'a[href$=webm],'
+                               'a[href$=mp4],'
+                               'a[href$=mp3]'):
+            img_url = urlparse.urljoin(url, img['href']).encode('utf-8')
+            if img_url not in scrape:
+                scrape.append(img_url)
+                if args.verbose:
+                    print("found item: " + img_url)
 
-    # set up path names and other variables for downloads
-    if args.directory:
-        home = args.directory[0]
-        fpath = os.path.join(home, base, path, thread)
-    else:
-        home = os.path.expanduser("~")
-        fpath = os.path.join(home, "chanscraper", base, path, thread)
-    i = e = s = 0
+        print(fg.GREEN + "Setting up directory...", end="\r")
+        sys.stdout.flush()
 
-    if args.timeout:
-        kill = args.timeout[0]
-    else:
-        kill = 10
-
-    # create directory if necessary
-    if not os.path.exists(fpath):
-        os.makedirs(fpath)
-
-    print(style.CLINE + fg.GREEN + "Preparing scraper...", end="\r")
-    sys.stdout.flush()
-
-    # download array to disk
-    for img in scrape:
-        file_name = img.split('/')[-1]
-        full_path = os.path.join(fpath, file_name)
-        if not os.path.exists(full_path):
-            try:
-                filedata = urllib2.urlopen(img, timeout=kill)
-                i += 1
-                print(style.CLINE + fg.GREEN +
-                      "Grabbing file... [" + str(i) + "/" +
-                      str(len(scrape) - s) + "]", end="\r")
-                with open(full_path, 'wb') as f:
-                    f.write(filedata.read())
-                sys.stdout.flush()
-            except urllib2.HTTPError:
-                e += 1
-                print(style.CLINE + fg.RED + "HTTP error, skipping... [" +
-                      str(e) + "]", end="\r")
-            except urllib2.URLError:
-                e += 1
-                print(style.CLINE + fg.RED +
-                      "Timeout or bad URL, skipping... [" + str(e) + "]",
-                      end="\r")
+        # set up path names and other variables for downloads
+        if args.directory:
+            home = args.directory[0]
+            fpath = os.path.join(home, base, path, thread)
         else:
-            s += 1
-            print(fg.YELLOW + "File already exists, skipping... [" +
-                  str(s) + "]", end="\r")
-            sys.stdout.flush()
+            home = os.path.expanduser("~")
+            fpath = os.path.join(home, "chanscraper", base, path, thread)
+        i = e = s = 0
 
-    # check passed time and convert to readable string
-    finish = datetime.now() - start
-    finish = str(finish.total_seconds())
+        if args.timeout:
+            kill = args.timeout[0]
+        else:
+            kill = 10
 
-    # print success messages as notification window and in terminal
-    if i - e == 0:
-        notify("No new files have been downloaded.")
-    else:
-        notify("Downloaded " + str(i - e) + " new files from /" + path +
-           "/ in " + finish + " seconds!")
-    print(bg.GREEN + fg.BLACK +
-          "Downloaded " + str(i - e) + " new files from /" + path +
-          "/ in " + style.BLINK + finish + " seconds!\n" +
-          style.RESET_ALL + fg.YELLOW + "Skipped: " + str(s) +
-          style.RESET_ALL + " | " + fg.RED + "Errors: " + str(e) +
-          style.RESET_ALL + "\n")
+        # create directory if necessary
+        if not os.path.exists(fpath):
+            os.makedirs(fpath)
 
-    # remove duplicate files if args is set
-    if args.cleanup:
-        print("Starting duplicate detection...", end="\r")
-        dupe.main(fpath)
+        print(style.CLINE + fg.GREEN + "Preparing scraper...", end="\r")
+        sys.stdout.flush()
+
+        # download array to disk
+        for img in scrape:
+            file_name = img.split('/')[-1]
+            full_path = os.path.join(fpath, file_name)
+            if not os.path.exists(full_path):
+                try:
+                    filedata = urllib2.urlopen(img, timeout=kill)
+                    i += 1
+                    print(style.CLINE + fg.GREEN +
+                          "Grabbing file... [" + str(i) + "/" +
+                          str(len(scrape) - s) + "]", end="\r")
+                    with open(full_path, 'wb') as f:
+                        f.write(filedata.read())
+                    sys.stdout.flush()
+                except urllib2.HTTPError:
+                    e += 1
+                    print(style.CLINE + fg.RED + "HTTP error, skipping... [" +
+                          str(e) + "]", end="\r")
+                except urllib2.URLError:
+                    e += 1
+                    print(style.CLINE + fg.RED +
+                          "Timeout or bad URL, skipping... [" + str(e) + "]",
+                          end="\r")
+            else:
+                s += 1
+                print(fg.YELLOW + "File already exists, skipping... [" +
+                      str(s) + "]", end="\r")
+                sys.stdout.flush()
+
+        # check passed time and convert to readable string
+        finish = datetime.now() - start
+        finish = str(finish.total_seconds())
+
+        # print success messages as notification window and in terminal
+        if i - e == 0:
+            notify("No new files have been downloaded.")
+        else:
+            notify("Downloaded " + str(i - e) + " new files from /" + path +
+               "/ in " + finish + " seconds!")
+        print(bg.GREEN + fg.BLACK +
+              "Downloaded " + str(i - e) + " new files from /" + path +
+              "/ in " + style.BLINK + finish + " seconds!\n" +
+              style.RESET_ALL + fg.YELLOW + "Skipped: " + str(s) +
+              style.RESET_ALL + " | " + fg.RED + "Errors: " + str(e) +
+              style.RESET_ALL + "\n")
+
+        # remove duplicate files if args is set
+        if args.cleanup:
+            print("Starting duplicate detection...", end="\r")
+            dupe.main(fpath)
+            break
 
 
 # get URL from args or user
