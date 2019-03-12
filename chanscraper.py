@@ -251,9 +251,11 @@ def logic():
               style.RESET_ALL + "\n")
 
         # remove duplicate files if args is set
-        if args.cleanup:
+        if args.cleanup and i - e > 0:
             print("Starting duplicate detection...", end="\r")
             dupe.main(fpath)
+
+        # end the loop after finishing
         break
 
 
