@@ -175,9 +175,11 @@ def logic():
             re_unix='((?:\\/[\\w\\.\\-]+)+)'
             re_match=re.compile(re_fill+re_fqdn+re_unix,re.IGNORECASE|re.DOTALL)
             for textlinks in soup.select('blockquote'):
-                textlink = textlinks.find_all(text=re_match)
-                if textlink:
-                    re_list.append(textlink)
+                all_textlinks = textlinks.find_all(text=re_match)
+                for textlink in all_textlinks:
+                    if textlink:
+                        textlink.encode('utf-8')
+                        re_list.append(textlink)
 
             if args.verbose:
                 print(re_list)
