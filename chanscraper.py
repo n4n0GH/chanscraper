@@ -3,19 +3,30 @@
 # coding: utf-8
 
 
+#          _
+#         | |
+#      ___| |__   __ _ _ __    ___  ___ _ __ __ _ _ __   ___ _ __
+#     / __| '_ \ / _` | '_ \  / __|/ __| '__/ _` | '_ \ / _ \ '__|
+#    | (__| | | | (_| | | | | \__ \ (__| | | (_| | |_) |  __/ |
+#     \___|_| |_|\__,_|_| |_| |___/\___|_|  \__,_| .__/ \___|_|
+#                                                | |
+#                                                |_|
+
+
 # chanscraper.py is a standalone mass downloader for any arbitrary
 # chan or website in general. It looks for links that point to media
 # files and downloads them accordingly.
 
 
 # TODO: have only hrefs in array if the <a> has an <img> child
-# TODO: custom download directory
-# TODO: check for text-links on URL and paste them into txt-file
+#       (reduces amount of files downloaded on some sites)
 # TODO: circumvent bot detection on websites like ylilauta
 # TODO: periodic downloads
 # TODO: specify additional filetypes through sysargs
 # TODO: use config file to store additional filetypes, custom directories or if
 #       script should exit terminal upon completion
+# TODO: add flow to enable user to use specific program parts by themselves
+#       (i.e. check a folder for dupes manually)
 
 
 # import some libraries
@@ -32,6 +43,7 @@ import os
 import re
 import signal
 import hashlib
+import csv
 import dupe
 
 
@@ -97,6 +109,9 @@ parser.add_argument("-D", "--directory",
 parser.add_argument("-v", "--verbose",
                     help="print additional messages during processing for \
                     debugging purposes", action="store_true")
+parser.add_argument("-l", "--links",
+                    help="crawls all posts for links and saves them to disk",
+                    action="store_true")
 args = parser.parse_args()
 
 
@@ -109,19 +124,6 @@ sys.stdout.write("\x1b]2;chanscraper\x07")
 
 if args.verbose:
     print(bg.GREEN + fg.BLACK + "VERBOSE MODE ACTIVE" + style.RESET_ALL)
-
-# print ASCII intro
-print("""\033[32m
-      _
-     | |
-  ___| |__   __ _ _ __    ___  ___ _ __ __ _ _ __   ___ _ __
- / __| '_ \ / _` | '_ \  / __|/ __| '__/ _` | '_ \ / _ \ '__|
-| (__| | | | (_| | | | | \__ \ (__| | | (_| | |_) |  __/ |
- \___|_| |_|\__,_|_| |_| |___/\___|_|  \__,_| .__/ \___|_|
-                                            | |
-                                            |_|         \033[31mv0.6
-\033[0m
-""")
 
 
 # set up UA so *chan accepts the request
@@ -164,6 +166,21 @@ def logic():
         except urllib2.URLError:
             print(fg.RED + "Host unreachable, stopping...\n" + style.RESET_ALL)
             break
+
+        # fetch all links, if user wants to
+        if args.links:
+            re_list=[]
+            re_fill='.*?'
+            re_fqdn='((?:[a-z][a-z\\.\\d\\-]+)\\.(?:[a-z][a-z\\-]+))(?![\\w\\.])'
+            re_unix='((?:\\/[\\w\\.\\-]+)+)'
+            re_match=re.compile(re_fill+re_fqdn+re_unix,re.IGNORECASE|re.DOTALL)
+            for textlinks in soup.select('blockquote'):
+                textlink = textlinks.find_all(text=re_match)
+                if textlink:
+                    re_list.append(textlink)
+
+            if args.verbose:
+                print(re_list)
 
         # fetch all files and append to array
         scrape = []
@@ -232,6 +249,13 @@ def logic():
                 print(fg.YELLOW + "File already exists, skipping... [" +
                       str(s) + "]", end="\r")
                 sys.stdout.flush()
+
+        # write collected links to disk
+        link_name = "links.csv"
+        link_path = os.path.join(fpath, link_name)
+        with open(link_path, 'wb') as destination:
+            wr = csv.writer(destination, quoting=csv.QUOTE_ALL)
+            wr.writerow(re_list)
 
         # check passed time and convert to readable string
         finish = datetime.now() - start
