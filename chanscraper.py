@@ -253,11 +253,12 @@ def logic():
                 sys.stdout.flush()
 
         # write collected links to disk
-        link_name = "links.csv"
-        link_path = os.path.join(fpath, link_name)
-        with open(link_path, 'wb') as destination:
-            wr = csv.writer(destination, quoting=csv.QUOTE_ALL)
-            wr.writerow(re_list)
+        if args.links:
+            link_name = "links.csv"
+            link_path = os.path.join(fpath, link_name)
+            with open(link_path, 'wb') as destination:
+                wr = csv.writer(destination, quoting=csv.QUOTE_ALL)
+                wr.writerow(re_list)
 
         # check passed time and convert to readable string
         finish = datetime.now() - start
